@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "CLEAN_UP_DAYS-GIT.sln"
+    "dotnet.defaultSolution": "CleanRiver.slnx"
 }
