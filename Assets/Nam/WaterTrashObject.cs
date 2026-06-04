@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class WaterTrashObject : MonoBehaviour
 {
-    public enum TrashCategory { Plastic, Metal, Organic }
+    public enum TrashCategory { VoCo, TaiChe, HuuCo }
     
     [Header("Cài đặt loại rác")]
     public TrashCategory category; // Đã là public để script WaterBin truy cập
@@ -67,4 +67,23 @@ public class WaterTrashObject : MonoBehaviour
     }
 
     public bool IsHeld() => isHeld;
+
+    // ================= MÃ MỚI BỔ SUNG ĐỂ HIỂN THỊ UI TIẾNG VIỆT =================
+    /// <summary>
+    /// Trả về chuỗi Tiếng Việt có dấu tương ứng với từng loại rác để hiển thị lên UI
+    /// </summary>
+    public string GetCategoryNameVietnamese()
+    {
+        switch (category)
+        {
+            case TrashCategory.VoCo:
+                return "Rác Vô Cơ";
+            case TrashCategory.TaiChe:
+                return "Rác Tái Chế";
+            case TrashCategory.HuuCo:
+                return "Rác Hữu Cơ";
+            default:
+                return "Không xác định";
+        }
+    }
 }

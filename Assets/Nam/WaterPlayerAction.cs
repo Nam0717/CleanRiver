@@ -61,9 +61,7 @@ public class WaterPlayerAction : MonoBehaviour
         }
     }
 
-    // --- SỬA HÀM NHẶT TAY: Không cho ném và thêm giới hạn vùng ---
     void HandleManualAction() {
-        // Chỉ cho phép nhặt nếu chưa cầm đồ
         if (heldTrash == null) {
             Ray ray = playerCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
             RaycastHit hit;
@@ -71,7 +69,6 @@ public class WaterPlayerAction : MonoBehaviour
                 WaterTrashObject trash = hit.collider.GetComponent<WaterTrashObject>();
                 
                 if (trash != null) {
-                    // Kiểm tra khoảng cách so với shorePoint
                     float distanceToShore = Vector3.Distance(trash.transform.position, shorePoint.position);
                     
                     if (distanceToShore <= pickupRadius) {
@@ -86,20 +83,21 @@ public class WaterPlayerAction : MonoBehaviour
                 }
             }
         } 
-        // ĐÃ XÓA logic ném đồ (Else) để không thể ném khi dùng tay
         else {
             Debug.Log("Không thể ném bằng tay!");
         }
     }
 
-    // ... (Các hàm còn lại giữ nguyên không đổi) ...
+    // --- HÀM KIỂM TRA THÙNG RÁC: Đã sửa đổi để hiển thị Tiếng Việt có dấu ---
     void CheckForBinFocus() {
         Ray ray = playerCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, reachDistance, layerToHit)) {
             WaterBin bin = hit.collider.GetComponent<WaterBin>();
             if (bin != null) {
-                if (binNameText != null) binNameText.text = "THÙNG RÁC: " + bin.binType.ToString().ToUpper();
+                // ĐÃ ĐỔI: Sử dụng hàm bổ trợ để chuyển đổi chuỗi chữ có dấu viết hoa
+                if (binNameText != null) binNameText.text = "THÙNG RÁC: " + GetBinNameVietnamese(bin);
+                
                 if (interactPrompt != null && heldTrash != null) interactPrompt.SetActive(true);
             } else ClearBinUI();
         } else ClearBinUI();
@@ -158,6 +156,24 @@ public class WaterPlayerAction : MonoBehaviour
                 trash.BeCollected(shorePoint.position);
                 if (waterMan != null) waterMan.AddCleanProgress(); 
             }
+        }
+    }
+
+    // ================= MÃ MỚI BỔ SUNG ĐỂ CHUYỂN ĐỔI CHỮ CÓ DẤU CHO THÙNG RÁC =================
+    /// <summary>
+    /// Trả về chuỗi Tiếng Việt có dấu viết hoa từ thuộc tính binType của script WaterBin
+    /// </summary>
+    private string GetBinNameVietnamese(WaterBin bin) {
+        // Chuyển kiểu enum của binType thành chuỗi để so sánh chính xác
+        switch (bin.binType.ToString()) {
+            case "VoCo": 
+                return "VÔ CƠ";
+            case "TaiChe": 
+                return "TÁI CHẾ";
+            case "HuuCo": 
+                return "HỮU CƠ";
+            default: 
+                return bin.binType.ToString().ToUpper();
         }
     }
 }
