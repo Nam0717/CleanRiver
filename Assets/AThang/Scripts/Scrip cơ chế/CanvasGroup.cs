@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 public class OnOffUI : MonoBehaviour
@@ -9,14 +10,12 @@ public class OnOffUI : MonoBehaviour
     public GameObject MoveBlock;
 
     int speedLevel = 0;
-    public GameObject speed1;
-    public GameObject speed2;
-    public GameObject speed3;
+    public TMP_Text speedText;
     private void Start()
     {
-        speed1.SetActive(true);
-        speed2.SetActive(false);
-        speed3.SetActive(false);
+
+        speedText.text = "X1";
+        Time.timeScale = 1f;
     }
     public void OnOption()
     {
@@ -36,31 +35,23 @@ public class OnOffUI : MonoBehaviour
     }
     public void SpeedTime()
     {
-        speedLevel++;
-
-        if (speedLevel > 2)
-        {
-            speedLevel = 0;
-        }
+        speedLevel = (speedLevel + 1) % 3;
 
         switch (speedLevel)
         {
             case 0:
                 Time.timeScale = 1f;
-                speed2.SetActive(false);
-                speed3.SetActive(false);
+                speedText.text = "X1";
                 break;
 
             case 1:
                 Time.timeScale = 2f;
-                speed2.SetActive(true);
-     
+                speedText.text = "X2";
                 break;
 
             case 2:
                 Time.timeScale = 3f;
-                speed2.SetActive(true);
-                speed3.SetActive(true);
+                speedText.text = "X3";
                 break;
         }
     }

@@ -14,7 +14,7 @@ public class TrainMover : MonoBehaviour
     private List<Vector3> path;
     private int index = 0;
     private bool moving = false;
-
+    public AudioSource AudioWin;
     public LeaderboardUI leaderboard;
 
     public void StartMoving(List<Vector3> newPath)
@@ -62,6 +62,7 @@ public class TrainMover : MonoBehaviour
         if (other.gameObject.CompareTag("Win"))
         {
             PanelWin.FadeIn();
+            AudioWin.Play();
             Timer.SetActive(false);
             Move.SetActive(false);
             TimerSpeed.SetActive(false);

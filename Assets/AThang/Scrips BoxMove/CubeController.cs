@@ -16,6 +16,7 @@ public class CubeController : MonoBehaviour
     Vector3 targetPos;
     public GridRailManager grid;
 
+    public AudioSource moveAudio;
     void Start()
     {
         targetPos = grid.origin +
@@ -53,6 +54,9 @@ public class CubeController : MonoBehaviour
 
         if (!IsInside(newPos)) return;
         if (!IsEmpty(newPos)) return;
+
+        // Phát âm thanh
+        moveAudio.Play();
 
         // 👉 XÓA rail cũ
         RailTile rail = GetComponent<RailTile>();
