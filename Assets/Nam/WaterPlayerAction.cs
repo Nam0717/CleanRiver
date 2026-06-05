@@ -167,7 +167,7 @@ public class WaterPlayerAction : MonoBehaviour
         // Chuyển kiểu enum của binType thành chuỗi để so sánh chính xác
         switch (bin.binType.ToString()) {
             case "VoCo": 
-                return "VÔ CƠ";
+                return "CÒN LẠI";
             case "TaiChe": 
                 return "TÁI CHẾ";
             case "HuuCo": 

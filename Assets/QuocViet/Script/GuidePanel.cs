@@ -8,6 +8,13 @@ public class GuideUI : MonoBehaviour
 
     private int index = 0;
 
+    private void OnEnable()
+    {
+        // 🔥 ĐỒNG BỘ DỪNG GAME: Đóng băng toàn bộ thời gian hệ thống ngay khi bảng UI xuất hiện
+        Time.timeScale = 0f;
+        Debug.Log("[GuideUI] Đã dừng game để người chơi xem hướng dẫn.");
+    }
+
     void Start()
     {
         ShowImage(0);
@@ -44,5 +51,12 @@ public class GuideUI : MonoBehaviour
     public void Close()
     {
         gameObject.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        // 🔥 ĐỒNG BỘ CHẠY TIẾP: Trả lại tốc độ thời gian bình thường khi bảng UI bị ẩn đi
+        Time.timeScale = 1f;
+        Debug.Log("[GuideUI] Đã đóng hướng dẫn, tiếp tục trò chơi.");
     }
 }
