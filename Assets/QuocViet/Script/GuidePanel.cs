@@ -11,7 +11,7 @@ public class GuideUI : MonoBehaviour
     private void OnEnable()
     {
         // 🔥 ĐỒNG BỘ DỪNG GAME: Đóng băng toàn bộ thời gian hệ thống ngay khi bảng UI xuất hiện
-        Time.timeScale = 0f;
+        Time.timeScale = 1f;
         Debug.Log("[GuideUI] Đã dừng game để người chơi xem hướng dẫn.");
     }
 

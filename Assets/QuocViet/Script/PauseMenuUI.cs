@@ -93,7 +93,7 @@ public class PauseMenuUI : MonoBehaviour
         }
 
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        SceneManager.LoadScene(currentSceneIndex);
+        SceneManager.LoadScene("Nam");
     }
 
     // Quit Game
