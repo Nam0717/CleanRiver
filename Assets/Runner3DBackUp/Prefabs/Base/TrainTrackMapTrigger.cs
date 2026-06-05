@@ -14,19 +14,23 @@ public class TrainTrackMapTrigger : MonoBehaviour
     [Tooltip("Số giây chờ cho CÁC LẦN XUẤT HIỆN TIẾP THEO (Từ map đặc biệt thứ 2 trở đi).")]
     public float subsequentTriggerDelay = 9.0f; 
 
-    [Header("Cấu hình Tàu Hỏa (Chỉ dùng cho Map Đèn Đỏ)")]
+    // 🔥 BIẾN MỚI THEO Ý BẠN
+    [Tooltip("Số giây chờ (Delay) trước khi tàu chạy ở MAP ĐÈN XANH (để tạo hiệu ứng tàu chạy qua trước mắt người chơi từ xa).")]
+    public float greenLightTrainDelay = 3.0f; 
+
+    [Header("Cấu hình Tàu Hỏa")]
     public GameObject trainObject;         
     public Vector3 trainMoveDirection = Vector3.right; 
     public float trainSpeed = 45f;         
 
-    // 🔥 CẤU HÌNH MỚI: ÂM THANH TÀU CHẠY
-    [Header("Âm Thanh Tàu Hỏa (Mới thêm)")]
+    [Header("Âm Thanh Tàu Hỏa")]
     public AudioSource trainAudioSource;   // Kéo thành phần AudioSource của trạm/tàu vào đây
     public AudioClip trainRunningSound;    // Kéo file âm thanh tiếng tàu chạy/hú còi vào đây
 
     private bool isTrainMoving = false;
     private Vector3 initialTrainLocalPosition; 
     private Coroutine delayCoroutine; 
+    private Coroutine greenTrainCoroutine; // 🔥 Quản lý tiến trình delay tàu đèn xanh
 
     void Awake()
     {
@@ -35,7 +39,6 @@ public class TrainTrackMapTrigger : MonoBehaviour
             initialTrainLocalPosition = trainObject.transform.localPosition;
         }
 
-        // Tự động tìm AudioSource trên chính Object này nếu Nam quên không kéo thả
         if (trainAudioSource == null)
         {
             trainAudioSource = GetComponent<AudioSource>();
@@ -51,15 +54,27 @@ public class TrainTrackMapTrigger : MonoBehaviour
             trainObject.transform.localPosition = initialTrainLocalPosition;
         }
 
-        // Tắt âm thanh tàu của lượt cũ nếu có khi vừa kích hoạt lại từ Pool
         if (trainAudioSource != null)
         {
             trainAudioSource.Stop();
         }
 
+        // Dọn dẹp các Coroutine cũ tránh bị chồng lặp khi tái sử dụng từ Pool
         if (delayCoroutine != null)
         {
             StopCoroutine(delayCoroutine);
+            delayCoroutine = null;
+        }
+        if (greenTrainCoroutine != null)
+        {
+            StopCoroutine(greenTrainCoroutine);
+            greenTrainCoroutine = null;
+        }
+
+        // KÍCH HOẠT LOGIC TÀU CHẠY CHO ĐÈN XANH (CÓ DELAY)
+        if (!isRedLightMap)
+        {
+            greenTrainCoroutine = StartCoroutine(DelayedGreenLightTrain());
         }
 
         RunnerStats stats = FindObjectOfType<RunnerStats>();
@@ -69,6 +84,21 @@ public class TrainTrackMapTrigger : MonoBehaviour
             float chosenDelay = (stats.trafficMapCount == 1) ? initialTriggerDelay : subsequentTriggerDelay;
             delayCoroutine = StartCoroutine(DelayedTrafficTrigger(chosenDelay, stats));
         }
+    }
+
+    // 🔥 COROUTINE MỚI: Xử lý delay tàu chạy ở map đèn xanh
+    private IEnumerator DelayedGreenLightTrain()
+    {
+        // Chờ đúng số giây Nam cấu hình trên Inspector rồi mới cho tàu chạy
+        yield return new WaitForSeconds(greenLightTrainDelay);
+        
+        isTrainMoving = true;
+        if (trainAudioSource != null && trainRunningSound != null)
+        {
+            trainAudioSource.clip = trainRunningSound;
+            trainAudioSource.Play();
+        }
+        Debug.Log($"[TrainTrackMapTrigger] Đèn Xanh: Hết {greenLightTrainDelay}s delay -> Tàu hỏa bắt đầu chạy qua giao lộ từ xa!");
     }
 
     private IEnumerator DelayedTrafficTrigger(float delay, RunnerStats stats)
@@ -82,19 +112,18 @@ public class TrainTrackMapTrigger : MonoBehaviour
 
     void Update()
     {
-        if (isRedLightMap && isTrainMoving && trainObject != null)
+        if (isTrainMoving && trainObject != null)
         {
             trainObject.transform.Translate(trainMoveDirection * trainSpeed * Time.deltaTime, Space.Self);
         }
     }
 
-    // Hàm này được RunnerStats gọi chuẩn xác ngay khi đèn chuyển sang màu ĐỎ
+    // Hàm này được RunnerStats gọi chuẩn xác ngay khi đèn chuyển sang màu ĐỎ (Chỉ dùng cho Map Đèn Đỏ)
     public void StartTrainMovement()
     {
         isTrainMoving = true;
         Debug.Log("[TrainTrackMapTrigger] Đèn đỏ sáng lên -> Tàu hỏa xuất kích vượt giao lộ!");
 
-        // 🔥 KÍCH HOẠT PHÁT ÂM THANH TÀU CHẠY
         if (trainAudioSource != null && trainRunningSound != null)
         {
             trainAudioSource.clip = trainRunningSound;
@@ -104,7 +133,6 @@ public class TrainTrackMapTrigger : MonoBehaviour
 
     void OnDisable()
     {
-        // 🔥 TỰ ĐỘNG DỌN DẸP: Tắt ngay âm thanh khi miếng map bị thu hồi về Pool để tránh lỗi chồng tiếng
         if (trainAudioSource != null)
         {
             trainAudioSource.Stop();
@@ -114,6 +142,13 @@ public class TrainTrackMapTrigger : MonoBehaviour
         {
             StopCoroutine(delayCoroutine);
             delayCoroutine = null;
+        }
+
+        // 🔥 DỌN DẸP AN TOÀN: Hủy tiến trình chờ tàu nếu map bị thu hồi sớm
+        if (greenTrainCoroutine != null)
+        {
+            StopCoroutine(greenTrainCoroutine);
+            greenTrainCoroutine = null;
         }
     }
 }
