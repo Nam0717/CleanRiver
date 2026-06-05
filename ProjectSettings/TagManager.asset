@@ -11,6 +11,7 @@ TagManager:
   - groundMask
   - Trash
   - Cart
+  - Enemy
   layers:
   - Default
   - TransparentFX

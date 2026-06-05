@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class TrainMover : MonoBehaviour
 {
+    public GameObject trash;
     public GameObject Timer;
     public GameObject Run;
     public GameObject TimerSpeed;
@@ -61,6 +62,7 @@ public class TrainMover : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Win"))
         {
+            trash.SetActive(false);
             PanelWin.FadeIn();
             AudioWin.Play();
             Timer.SetActive(false);
