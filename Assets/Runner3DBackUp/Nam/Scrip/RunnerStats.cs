@@ -77,6 +77,7 @@ public class RunnerStats : MonoBehaviour
     private bool hasStoppedCorrectly = false; 
 
     private float lightStateTimer = 0f;    
+    private float greenFreezeTimer = 0f; // 🔥 BIẾN MỚI: Đếm thời gian bị khựng khi phanh nhầm Đèn Xanh
     [HideInInspector] public int trafficMapCount = 0; 
 
     void Awake()
@@ -118,7 +119,7 @@ public class RunnerStats : MonoBehaviour
     {
         if (!isGameRunning || isGameOver) return;
 
-        // --- CƠ CHẾ ĐÈ PHANH XE BẰNG SPACE + LOGIC PHẠT MỚI ---
+        // --- CƠ CHẾ ĐÈ PHANH XE BẰNG SPACE + LOGIC PHẠT CHỐNG ÙN TẮC MỚI ---
         if (currentLightState != LightState.None)
         {
             if (currentLightState == LightState.Red || currentLightState == LightState.Green)
@@ -126,9 +127,15 @@ public class RunnerStats : MonoBehaviour
                 lightStateTimer += Time.deltaTime;
             }
 
+            // 🔥 TỰ ĐỘNG ĐẾM THỜI GIAN PHẠT: Nếu đang đèn xanh và lỡ phanh (đã bị trừ máu)
+            if (currentLightState == LightState.Green && hasProcessedDamage)
+            {
+                greenFreezeTimer += Time.deltaTime;
+            }
+
             if (Input.GetKey(KeyCode.Space)) // Người chơi đang ĐÈ PHANH
             {
-                runSpeed = 0f; 
+                runSpeed = 0f; // Mặc định phanh xe đứng yên
 
                 // ĐÈN ĐỎ: Ghi nhận đã dừng đúng quy định, kích hoạt cờ an toàn
                 if (currentLightState == LightState.Red)
@@ -136,15 +143,29 @@ public class RunnerStats : MonoBehaviour
                     hasStoppedCorrectly = true;
                 }
 
-                // 🔥 ĐÈN XANH SỬA TẠI ĐÂY: Nhấn phanh là PHẠT LUÔN lập tức, không chờ giây ân hạn
-                if (currentLightState == LightState.Green && !hasProcessedDamage)
+                // 🔥 ĐÈN XANH SỬA TẠI ĐÂY: Xử lý khựng 0.5s rồi ép chạy tiếp
+                if (currentLightState == LightState.Green)
                 {
-                    TakeDamage(1);
-                    hasProcessedDamage = true;
-                    Debug.Log("Giao thông: Đèn xanh tự nhiên phanh gấp! Bị xe phía sau tông trúng ngay lập tức.");
+                    if (!hasProcessedDamage)
+                    {
+                        TakeDamage(1);
+                        hasProcessedDamage = true;
+                        greenFreezeTimer = 0f; // Bắt đầu tính chu kỳ khựng chân
+                        Debug.Log("Giao thông: Đèn xanh tự nhiên phanh gấp! Bị xe phía sau tông trúng ngay lập tức.");
+                    }
+
+                    // KIỂM TRA ĐIỀU KIỆN ÉP ĐI TIẾP
+                    if (greenFreezeTimer >= 0.5f) 
+                    {
+                        runSpeed = baseRunSpeed; // 🔥 ÉP BUỘC CHẠY TIẾP dù tay người chơi vẫn đang đè chặt Space!
+                    }
+                    else
+                    {
+                        runSpeed = 0f; // Đang trong khoảng 0.5 giây khựng ban đầu
+                    }
                 }
             }
-            else // Người chơi KHÔNG PHANH (Thả tự do hoặc đang chạy)
+            else // Người chơi KHÔNG PHANH (Thả tự do hoặc đang chạy bình thường)
             {
                 runSpeed = baseRunSpeed; 
 
@@ -195,6 +216,7 @@ public class RunnerStats : MonoBehaviour
         hasProcessedDamage = false;
         hasStoppedCorrectly = false; 
         lightStateTimer = 0f; 
+        greenFreezeTimer = 0f; // 🔥 RESET bộ đếm khựng mỗi khi bước vào đợt đèn giao lộ mới
         if (trafficLightPanel != null) trafficLightPanel.SetActive(true);
 
         // 1. GIAI ĐOẠN NHẤP NHÁY CẢNH BÁO CHUẨN ĐỜI THỰC (3 LẦN)
@@ -244,6 +266,7 @@ public class RunnerStats : MonoBehaviour
         currentLightState = LightState.None;
         hasStoppedCorrectly = false; 
         lightStateTimer = 0f;
+        greenFreezeTimer = 0f; // Reset dọn dẹp cuối vòng đèn
         if (trafficLightPanel != null) trafficLightPanel.SetActive(false);
         if (spacePromptUI != null) spacePromptUI.SetActive(false);
         SetPedestrianVisuals(false, false); 
