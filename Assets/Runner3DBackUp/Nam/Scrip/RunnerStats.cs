@@ -9,7 +9,7 @@ public class RunnerStats : MonoBehaviour
     [Header("Cấu hình Game")]
     public float runSpeed = 10f;
     public int maxHP = 3;
-    public float distancePerLevel = 100f;
+    public float distancePerLevel = 100f; 
 
     [Header("Cấu hình Sao (Mốc khoảng cách)")]
     public float dist1Star = 100f;
@@ -46,7 +46,7 @@ public class RunnerStats : MonoBehaviour
     
     [Header("UI Sao Kết Quả")]
     public Image[] starImages; 
-    public Color starUnlockedColor = Color.white; 
+    public Color starUnlockedColor = new Color(1f, 1f, 1f, 1f); 
     public Color starLockedColor = new Color(0.3f, 0.3f, 0.3f, 1f); 
 
     [Header("Hiệu ứng Visual")]
@@ -54,18 +54,30 @@ public class RunnerStats : MonoBehaviour
     public float punchDuration = 0.2f;
     private Coroutine punchCoroutine;
 
-    // ================= HỆ THỐNG ĐÈN GIAO THÔNG CHẮN TÀU =================
-    [Header("UI Đèn Giao Thông")]
+    // ================= HỆ THỐNG ĐÈN GIAO THÔNG ĐƯỜNG RAY =================
+    [Header("UI Đèn Giao Thông Chắn Tàu")]
     public GameObject trafficLightPanel; 
     public Image yellowLightImg;
     public Image redLightImg;
     public Image greenLightImg;
-    public GameObject spacePromptUI;     // Gợi ý UI bấm phanh dưới chân đèn
+    public GameObject spacePromptUI;     
+
+    [Header("Cấu hình thời gian phản xạ (Chỉ dùng cho Đèn Đỏ)")]
+    [Tooltip("Thời gian an toàn (giây) chừa cho người chơi kịp bấm phanh khi ĐÈN ĐỎ xuất hiện trước khi tính phạt.")]
+    public float gracePeriod = 2.0f; 
+
+    [Header("UI Ký Hiệu Người Đi Bộ (Tách Biệt Đỏ/Xanh)")]
+    public Image pedestrianStopImg;       
+    public Image pedestrianWalkImg;       
 
     private float baseRunSpeed;           
-    private enum LightState { None, Yellow, Red, Green }
+    private enum LightState { None, Warning, Red, Green }
     private LightState currentLightState = LightState.None;
     private bool hasProcessedDamage = false; 
+    private bool hasStoppedCorrectly = false; 
+
+    private float lightStateTimer = 0f;    
+    [HideInInspector] public int trafficMapCount = 0; 
 
     void Awake()
     {
@@ -84,6 +96,7 @@ public class RunnerStats : MonoBehaviour
         currentDistance = 0f;
         currentLevel = 0;
         isGameOver = false;
+        trafficMapCount = 0; 
         
         baseRunSpeed = runSpeed; 
         nextSoundMilestone = soundInterval; 
@@ -92,6 +105,8 @@ public class RunnerStats : MonoBehaviour
 
         if (trafficLightPanel != null) trafficLightPanel.SetActive(false);
         if (spacePromptUI != null) spacePromptUI.SetActive(false);
+        
+        SetPedestrianVisuals(false, false); 
 
         UpdateUI(); 
 
@@ -103,31 +118,42 @@ public class RunnerStats : MonoBehaviour
     {
         if (!isGameRunning || isGameOver) return;
 
-        // --- XỬ LÝ NHẤN GIỮ PHÍM SPACE ĐỂ PHANH XE ---
+        // --- CƠ CHẾ ĐÈ PHANH XE BẰNG SPACE + LOGIC PHẠT MỚI ---
         if (currentLightState != LightState.None)
         {
-            if (Input.GetKey(KeyCode.Space)) // Đang giữ phanh
+            if (currentLightState == LightState.Red || currentLightState == LightState.Green)
             {
-                runSpeed = 0f; // Map dừng chạy, người chơi dừng trước đường ray
+                lightStateTimer += Time.deltaTime;
+            }
 
-                // BẪY PHẠT: Đang đèn Xanh mà phanh gấp -> Xe sau đâm -> Trừ máu
+            if (Input.GetKey(KeyCode.Space)) // Người chơi đang ĐÈ PHANH
+            {
+                runSpeed = 0f; 
+
+                // ĐÈN ĐỎ: Ghi nhận đã dừng đúng quy định, kích hoạt cờ an toàn
+                if (currentLightState == LightState.Red)
+                {
+                    hasStoppedCorrectly = true;
+                }
+
+                // 🔥 ĐÈN XANH SỬA TẠI ĐÂY: Nhấn phanh là PHẠT LUÔN lập tức, không chờ giây ân hạn
                 if (currentLightState == LightState.Green && !hasProcessedDamage)
                 {
                     TakeDamage(1);
                     hasProcessedDamage = true;
-                    Debug.Log("Lỗi: Đèn xanh không được dừng! Bị xe sau tông trúng.");
+                    Debug.Log("Giao thông: Đèn xanh tự nhiên phanh gấp! Bị xe phía sau tông trúng ngay lập tức.");
                 }
             }
-            else // Không nhấn giữ phanh (Thả tự do)
+            else // Người chơi KHÔNG PHANH (Thả tự do hoặc đang chạy)
             {
                 runSpeed = baseRunSpeed; 
 
-                // BẪY PHẠT: Đang đèn Đỏ không chịu dừng -> Đâm vào tàu hỏa -> Trừ máu
-                if (currentLightState == LightState.Red && !hasProcessedDamage)
+                // ĐÈN ĐỎ: Chỉ phạt khi quá thời gian ân hạn (gracePeriod) VÀ người chơi chưa từng dừng đúng trước đó
+                if (currentLightState == LightState.Red && lightStateTimer > gracePeriod && !hasProcessedDamage && !hasStoppedCorrectly)
                 {
                     TakeDamage(1);
                     hasProcessedDamage = true;
-                    Debug.Log("Lỗi: Vượt đèn đỏ! Va chạm dữ dội với tàu hỏa.");
+                    Debug.Log($"Giao thông: Đèn đỏ quá {gracePeriod} giây không chịu dừng! Phạt trừ máu.");
                 }
             }
         }
@@ -167,41 +193,60 @@ public class RunnerStats : MonoBehaviour
     private IEnumerator TrafficLightRoutine(bool isRedLightMap, TrainTrackMapTrigger activeMap)
     {
         hasProcessedDamage = false;
+        hasStoppedCorrectly = false; 
+        lightStateTimer = 0f; 
         if (trafficLightPanel != null) trafficLightPanel.SetActive(true);
 
-        // 1. Chu kỳ đèn Vàng: Nháy 3 lần (Thời gian đệm đưa vạch dừng đến sát mặt)
-        currentLightState = LightState.Yellow;
+        // 1. GIAI ĐOẠN NHẤP NHÁY CẢNH BÁO CHUẨN ĐỜI THỰC (3 LẦN)
+        currentLightState = LightState.Warning; 
         if (spacePromptUI != null) spacePromptUI.SetActive(false);
 
         for (int i = 0; i < 3; i++)
         {
-            SetLightVisuals(false, true, false); yield return new WaitForSeconds(0.4f);
-            SetLightVisuals(false, false, false); yield return new WaitForSeconds(0.4f);
+            if (isRedLightMap)
+            {
+                SetLightVisuals(false, true, false); 
+                SetPedestrianVisuals(true, false); 
+            }
+            else
+            {
+                SetLightVisuals(true, false, false); 
+                SetPedestrianVisuals(true, false); 
+            }
+            yield return new WaitForSeconds(0.4f);
+            
+            SetLightVisuals(false, false, false); 
+            SetPedestrianVisuals(false, false); 
+            yield return new WaitForSeconds(0.4f);
         }
 
-        // 2. Chuyển sang Đỏ (Map 1) hoặc Xanh (Map 2) theo thiết lập cố định
+        // 2. GIAI ĐOẠN ĐÈN SÁNG ĐỨNG YÊN CHÍNH THỨC (Duy trì đúng 3 giây, KHÔNG NHÁY)
         currentLightState = isRedLightMap ? LightState.Red : LightState.Green;
+        lightStateTimer = 0f; 
         if (spacePromptUI != null) spacePromptUI.SetActive(true);
 
         if (currentLightState == LightState.Red)
         {
-            SetLightVisuals(true, false, false);
+            SetLightVisuals(true, false, false); 
+            SetPedestrianVisuals(true, false); 
             
-            // Gọi tàu hỏa chạy cắt ngang qua trong đúng 3 giây
-            if (activeMap != null) activeMap.StartTrainMovement();
-            
+            if (activeMap != null) activeMap.StartTrainMovement(); 
             yield return new WaitForSeconds(3f); 
         }
-        else // Hàng đèn Xanh
+        else // LightState.Green
         {
-            SetLightVisuals(false, false, true);
-            yield return new WaitForSeconds(3f); // 3 giây trôi qua khu vực đông đúc
+            SetLightVisuals(false, false, true); 
+            SetPedestrianVisuals(false, true); 
+            yield return new WaitForSeconds(3f); 
         }
 
-        // 3. Reset hệ thống đèn
+        // 3. KẾT THÚC PHÂN ĐOẠN -> TẮT TOÀN BỘ CÁC ĐÈN UI
         currentLightState = LightState.None;
+        hasStoppedCorrectly = false; 
+        lightStateTimer = 0f;
         if (trafficLightPanel != null) trafficLightPanel.SetActive(false);
         if (spacePromptUI != null) spacePromptUI.SetActive(false);
+        SetPedestrianVisuals(false, false); 
         runSpeed = baseRunSpeed;
     }
 
@@ -210,6 +255,12 @@ public class RunnerStats : MonoBehaviour
         if (redLightImg != null) redLightImg.gameObject.SetActive(red);
         if (yellowLightImg != null) yellowLightImg.gameObject.SetActive(yellow);
         if (greenLightImg != null) greenLightImg.gameObject.SetActive(green);
+    }
+
+    private void SetPedestrianVisuals(bool stopActive, bool walkActive)
+    {
+        if (pedestrianStopImg != null) pedestrianStopImg.gameObject.SetActive(stopActive);
+        if (pedestrianWalkImg != null) pedestrianWalkImg.gameObject.SetActive(walkActive);
     }
 
     // --- CÁC HÀM CŨ GIỮ NGUYÊN VẸN ---

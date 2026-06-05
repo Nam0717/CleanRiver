@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class MoveBase : MonoBehaviour
 {
+    [Tooltip("Tốc độ mặc định nếu không tìm thấy GameManager")]
     public float speed = 10f;
 
     // Biến để lưu tham chiếu đến bộ quản lý game
@@ -10,7 +11,6 @@ public class MoveBase : MonoBehaviour
     void Start()
     {
         // Tự động tìm object có chứa script RunnerStats trong màn chơi
-        // Cách này giúp bạn không cần phải kéo thả thủ công
         gameManager = FindObjectOfType<RunnerStats>();
 
         if (gameManager == null)
@@ -29,8 +29,11 @@ public class MoveBase : MonoBehaviour
             return; 
         }
 
-        // Nếu code chạy xuống được đây nghĩa là Game Đang Chạy
-        // Base di chuyển về sau trục Z
-        transform.Translate(Vector3.back * speed * Time.deltaTime);
+        // 🔥 ĐÃ SỬA: Lấy tốc độ đồng bộ thời gian thực từ RunnerStats
+        // Khi người chơi đè giữ Space -> gameManager.runSpeed sẽ về 0 -> currentSpeed lập tức về 0
+        float currentSpeed = (gameManager != null) ? gameManager.runSpeed : speed;
+
+        // Base di chuyển về sau trục Z dựa theo tốc độ thực tế của màn chơi
+        transform.Translate(Vector3.back * currentSpeed * Time.deltaTime);
     }
 }
