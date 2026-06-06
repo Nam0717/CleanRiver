@@ -8,6 +8,7 @@ public class ShipMoveToPoint : MonoBehaviour
     public string sceneToLoad;      // Tên scene sẽ chuyển
 
     private bool isMoving = false;
+    public GameObject TGKM;
 
     void Update()
     {
@@ -24,6 +25,7 @@ public class ShipMoveToPoint : MonoBehaviour
             pointB.position,
             speed * Time.deltaTime
         );
+        TGKM.SetActive(false);
 
         // Kiểm tra nếu đã tới nơi
         if (Vector3.Distance(transform.position, pointB.position) < 0.1f)
