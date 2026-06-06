@@ -142,7 +142,7 @@ public class CandySortingManager : MonoBehaviour
 
     void UpdateScoreUI()
     {
-        if (candyCounterText != null) candyCounterText.text = $"Kẹo vào giỏ: {currentCorrectCount} / {totalCandiesToWin}";
+        if (candyCounterText != null) candyCounterText.text = $"Số Lần Đúng: {currentCorrectCount} / {totalCandiesToWin}";
         if (mistakeCounterText != null) mistakeCounterText.text = $"Số lần sai: {currentMistakeCount} / {maxAllowedMistakes}";
     }
 

@@ -1,14 +1,23 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class ShipMoveToPoint : MonoBehaviour
 {
-    public Transform pointB;        // Điểm đích
-    public float speed = 5f;        // Tốc độ di chuyển
-    public string sceneToLoad;      // Tên scene sẽ chuyển
+    public Transform pointB;
+    public float speed = 5f;
+    public string sceneToLoad;
 
     private bool isMoving = false;
-    public GameObject TGKM;
+
+    public CanvasGroup TGKM;
+    public CanvasGroup Button1;
+    public CanvasGroup Button2;
+    public CanvasGroup Button3;
+
+    public float fadeDuration = 1f;
+
+    bool isFading = false;
 
     void Update()
     {
@@ -25,9 +34,14 @@ public class ShipMoveToPoint : MonoBehaviour
             pointB.position,
             speed * Time.deltaTime
         );
-        TGKM.SetActive(false);
 
-        // Kiểm tra nếu đã tới nơi
+        // Chỉ fade 1 lần
+        if (!isFading)
+        {
+            isFading = true;
+            StartCoroutine(FadeUI());
+        }
+
         if (Vector3.Distance(transform.position, pointB.position) < 0.1f)
         {
             isMoving = false;
@@ -35,7 +49,30 @@ public class ShipMoveToPoint : MonoBehaviour
         }
     }
 
-    // Hàm này sẽ gọi khi nhấn button
+    IEnumerator FadeUI()
+    {
+        float timer = 0;
+
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+
+            float alpha = Mathf.Lerp(1, 0, timer / fadeDuration);
+
+            TGKM.alpha = alpha;
+            Button1.alpha = alpha;
+            Button2.alpha = alpha;
+            Button3.alpha = alpha;
+
+            yield return null;
+        }
+
+        TGKM.gameObject.SetActive(false);
+        Button1.gameObject.SetActive(false);
+        Button2.gameObject.SetActive(false);
+        Button3.gameObject.SetActive(false);
+    }
+
     public void StartMoving()
     {
         isMoving = true;

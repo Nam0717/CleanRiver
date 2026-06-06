@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Nam.unity
     guid: 9c13d7399ccaa68478c0f50c82688fe7
   - enabled: 1
+    path: Assets/Scenes/MinigameAnKeo.unity
+    guid: b9d717e87f1d9f4439f37bb754d250a6
+  - enabled: 1
     path: Assets/Scenes/Test Box 1.unity
     guid: c351519e42ea4b64d9b72ce5baa2bb38
   - enabled: 1
