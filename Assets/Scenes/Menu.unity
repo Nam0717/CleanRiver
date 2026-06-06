@@ -2697,7 +2697,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShipMoveToPoint
   pointB: {fileID: 110773814}
   speed: 10
-  sceneToLoad: Test Box 1
+  sceneToLoad: Nam
 --- !u!4 &3866848112559951848
 Transform:
   m_ObjectHideFlags: 0

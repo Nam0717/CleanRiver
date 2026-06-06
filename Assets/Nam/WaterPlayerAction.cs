@@ -33,9 +33,13 @@ public class WaterPlayerAction : MonoBehaviour
     public Color normalColor = Color.white;
 
     private WaterTrashObject heldTrash;
-    private WaterManager waterMan; 
+    private WaterManager waterMan;
+    public GameObject UiChoF;
+    public GameObject Uide;
 
     void Start() {
+        UiChoF.SetActive(false);
+        Uide.SetActive(false);
         waterMan = FindObjectOfType<WaterManager>();
         if (interactPrompt != null) interactPrompt.SetActive(false);
         if (binNameText != null) binNameText.text = ""; 
@@ -99,6 +103,8 @@ public class WaterPlayerAction : MonoBehaviour
                 if (binNameText != null) binNameText.text = "THÙNG RÁC: " + GetBinNameVietnamese(bin);
                 
                 if (interactPrompt != null && heldTrash != null) interactPrompt.SetActive(true);
+                Uide.SetActive(true);
+                UiChoF.SetActive(true);
             } else ClearBinUI();
         } else ClearBinUI();
     }
@@ -106,6 +112,8 @@ public class WaterPlayerAction : MonoBehaviour
     void ClearBinUI() {
         if (interactPrompt != null) interactPrompt.SetActive(false);
         if (binNameText != null) binNameText.text = "";
+        Uide.SetActive(false);
+        UiChoF.SetActive(false);
     }
 
     void UpdateToolUI() {

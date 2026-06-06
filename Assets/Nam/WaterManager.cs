@@ -23,11 +23,13 @@ public class WaterManager : MonoBehaviour
     [Header("Giao diện UI")]
     public TextMeshProUGUI progressText;  
     public TextMeshProUGUI depositText;   
+    public GameObject UiDe;
     public TextMeshProUGUI feedbackText; 
     public GameObject victoryPanel;      
     public Button restartButton;         
 
     void Start() {
+        UiDe.SetActive(false);
         // 🔥 KHỞI TẠO: Ban đầu số rác phải vớt sẽ bằng y chang số rác cần nộp thùng
         totalTrashToCollect = totalTrashToClean;
 
@@ -58,15 +60,18 @@ public class WaterManager : MonoBehaviour
             // 🔥 CHỈ PHẠT TĂNG: Số lượng rác mục tiêu cần phải vớt lên 1
             totalTrashToCollect++; 
             
-            if (feedbackText != null) {
-                feedbackText.text = "2 RÁC TRÔI MẤT! BẠN BỊ PHẠT VỚT BÙ THÊM 1 RÁC!";
-                feedbackText.color = Color.red;
+            if (feedbackText != null) 
+            {
+                //UiDe.SetActive(true);
+                //feedbackText.text = "2 RÁC TRÔI MẤT! BẠN BỊ PHẠT VỚT BÙ THÊM 1 RÁC!";
+                //feedbackText.color = Color.red;
             }
         } 
         else {
             if (feedbackText != null) {
-                feedbackText.text = "1 RÁC TRÔI MẤT! CẨN THẬN ĐỪNG ĐỂ TRÔI THÊM!";
-                feedbackText.color = Color.yellow;
+                //
+                //feedbackText.text = "1 RÁC TRÔI MẤT! CẨN THẬN ĐỪNG ĐỂ TRÔI THÊM!";
+                //feedbackText.color = Color.yellow;
             }
         }
         
@@ -75,6 +80,7 @@ public class WaterManager : MonoBehaviour
         
         CancelInvoke("ClearFeedback");
         Invoke("ClearFeedback", 2f);
+       
     }
 
     void UpdateWaterColor() {
@@ -99,10 +105,15 @@ public class WaterManager : MonoBehaviour
     public void ShowFeedback(bool isCorrect) {
         if (feedbackText == null) return;
         if (isCorrect) {
+            UiDe.SetActive(true);
             feedbackText.text = "CHÍNH XÁC!";
-            feedbackText.color = Color.green;
+            feedbackText.color = Color.white;
+            UiDe.SetActive(true);
+
         } else {
+            UiDe.SetActive(true);
             feedbackText.text = "SAI THÙNG RỒI!";
+            UiDe.SetActive(true);
             feedbackText.color = Color.red;
         }
         CancelInvoke("ClearFeedback");
@@ -111,6 +122,7 @@ public class WaterManager : MonoBehaviour
 
     void ClearFeedback() {
         if (feedbackText != null) feedbackText.text = "";
+        UiDe.SetActive(false);
     }
 
     void UpdateUI() {
@@ -133,5 +145,9 @@ public class WaterManager : MonoBehaviour
     public void RestartLevel() {
         Time.timeScale = 1f;
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+    }
+    public void NextLevel()
+    {
+        FindAnyObjectByType<FadeManager>().FadeAndLoadScene("Test Box 1");
     }
 }

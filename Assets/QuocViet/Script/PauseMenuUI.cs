@@ -111,5 +111,9 @@ public class PauseMenuUI : MonoBehaviour
         Application.Quit();
     #endif
     }
+    public void NextLevel()
+    {
+        FindAnyObjectByType<FadeManager>().FadeAndLoadScene("Test Box 1");
+    }
 
 }
